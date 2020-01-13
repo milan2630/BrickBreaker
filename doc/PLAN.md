@@ -64,7 +64,7 @@ My game would include power ups that affect either the ball or the
 paddle. Power ups on the ball could make the ball move slower, create multiple balls,
 or create a "heavy" ball that counts as 2 hits on each brick. The paddle
 could be powered up so that it moves faster or is bigger. Additionally,
-I would create power-downs that would make the ball move faster, shrink the paddle,
+I would create negative power-ups to make the game harder. These would make the ball move faster, shrink the paddle,
 or make the paddle move slower. 
 
 
