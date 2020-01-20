@@ -11,6 +11,7 @@ import javafx.scene.control.Label;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
+import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import javafx.scene.paint.Color;
 import javafx.util.Duration;
@@ -29,11 +30,12 @@ public class Main extends Application {
     public static final int FRAMES_PER_SECOND = 200;
     public static final int MILLISECOND_DELAY = 1000 / FRAMES_PER_SECOND;
     public static final double SECOND_DELAY = 1.0 / FRAMES_PER_SECOND;
-    public static final int SCREEN_WIDTH = 500;
+    public static final int SCREEN_WIDTH = 1000;
     public static final int SCREEN_HEIGHT = 500;
     private static final int START_LIVES = 3;
     private static final int NUM_LEVELS = 2;
     private static final int SCORE_PER_BRICK = 10;
+    private static final double PADDLE_Y_POS = 450;
 
     private List<Ball> ballsInPlay;
     private List<Brick> bricksInPlay;
@@ -46,6 +48,7 @@ public class Main extends Application {
     private int lives;
     private int score;
 
+    private Text display;
     private Group root;
     private Stage mainStage;
 
@@ -58,6 +61,7 @@ public class Main extends Application {
         lives = START_LIVES;
         score = 0;
         currentLevel = 1;
+        display = new Text();
         mainStage = stage;
         isLevel = false;
         Scene startScene = splashScreen();
@@ -100,82 +104,47 @@ public class Main extends Application {
     }
 
     private Scene setupLevel(int level){
-        root = new Group();
         currentLevel = level;
+        initializeLevelVariables();
+        initializeDisplay();
+        initializePaddle();
+        initializeBall();
+        
+
+        Scene scene = new Scene(root, SCREEN_WIDTH, SCREEN_HEIGHT);
+        scene.setOnKeyPressed(e -> handleKeyInput(e.getCode()));
+        return scene;
+    }
+
+    private void initializeBall() {
+        Ball resetBall = new Ball(paddle);
+        resetBall.setFill(Color.RED);
+        addBallToScene(resetBall);
+        isBallActive = false;
+    }
+
+    private void initializeLevelVariables(){
+        root = new Group();
         ballsInPlay = new ArrayList<>();
         bricksInPlay = new ArrayList<>();
         objectsInPlay = new ArrayList<>();
-        if(level == 1) {
-            Brick bri = new Brick(180, 50, 1);
-            bri.setFill(Color.PALEGREEN);
-            bricksInPlay.add(bri);
-            objectsInPlay.add(bri);
+    }
 
-            PaddleSpeedBrick br = new PaddleSpeedBrick(180, 200, 2);
-            br.setFill(Color.DARKGOLDENROD);
-            bricksInPlay.add(br);
-            objectsInPlay.add(br);
+    private void initializePaddle() {
+        paddle = new Paddle((SCREEN_WIDTH / 2) - (Paddle.BASE_PADDLE_WIDTH / 2), PADDLE_Y_POS);
+        paddle.setFill(Color.BLACK);
+        root.getChildren().add(paddle);
+        objectsInPlay.add(paddle);
+    }
 
-
-            MovingBrick b = new MovingBrick(0, 200);
-            b.setFill(Color.GAINSBORO);
-            bricksInPlay.add(b);
-            objectsInPlay.add(b);
-
-            paddle = new Paddle(150, 450);
-            paddle.setFill(Color.BLACK);
-
-
-            Ball ball = new Ball(paddle);
-            ball.setFill(Color.RED);
-            ballsInPlay.add(ball);
-            objectsInPlay.add(ball);
-
-            for (int i = 0; i < ballsInPlay.size(); i++) {
-                root.getChildren().add(ballsInPlay.get(i));
-            }
-
-            for (int i = 0; i < bricksInPlay.size(); i++) {
-                root.getChildren().add(bricksInPlay.get(i));
-            }
-
-            root.getChildren().add(paddle);
-            objectsInPlay.add(paddle);
-        }
-        else if(level == 2){
-
-
-            MovingBrick b = new MovingBrick(0, 100);
-            b.setFill(Color.GAINSBORO);
-            bricksInPlay.add(b);
-            objectsInPlay.add(b);
-
-            paddle = new Paddle(150, 450);
-            paddle.setFill(Color.BLACK);
-
-            Ball ball = new Ball(paddle);
-            ball.setFill(Color.RED);
-            ballsInPlay.add(ball);
-            objectsInPlay.add(ball);
-
-            for (int i = 0; i < ballsInPlay.size(); i++) {
-                root.getChildren().add(ballsInPlay.get(i));
-            }
-
-            for (int i = 0; i < bricksInPlay.size(); i++) {
-                root.getChildren().add(bricksInPlay.get(i));
-            }
-
-            root.getChildren().add(paddle);
-            objectsInPlay.add(paddle);
-        }
-
-        Scene scene = new Scene(root, 500, 500);
-        scene.setOnKeyPressed(e -> handleKeyInput(e.getCode()));
-
-        isBallActive = false;
-        return scene;
-
+    private void initializeDisplay() {
+        display.setX(0);
+        display.setY(15);
+        display.setFill(Color.RED);
+        display.setOpacity(.3);
+        display.setFont(Font.font("Arial", 15));
+        display.setText("Score: " + score + " Lives: "+ lives);
+        root.getChildren().add(display);
     }
 
     private void handleKeyInput(KeyCode code) {
@@ -210,10 +179,7 @@ public class Main extends Application {
         root.getChildren().removeAll(ballsInPlay);
         ballsInPlay = new ArrayList<>();
 
-        Ball resetBall = new Ball(paddle);
-        resetBall.setFill(Color.RED);
-        addBallToScene(resetBall);
-        isBallActive = false;
+        initializeBall();
 
     }
 
@@ -280,7 +246,12 @@ public class Main extends Application {
             checkGameOver();
             checkLevelBeat();
             moveBallWithPaddle();
+            updateScore();
         }
+    }
+
+    private void updateScore() {
+        display.setText("Score: " + score + " Lives: "+ lives);
     }
 
     private void moveBallWithPaddle(){
@@ -294,9 +265,8 @@ public class Main extends Application {
 
     private void checkLevelBeat() {
         if(bricksInPlay.size() == 0){
-            currentLevel++;
             if(currentLevel <= NUM_LEVELS){
-                mainStage.setScene(setupLevel(currentLevel));
+                mainStage.setScene(setupLevel(currentLevel+1));
             }
             else{
                 gameWin();
