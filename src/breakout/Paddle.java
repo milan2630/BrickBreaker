@@ -2,17 +2,19 @@ package breakout;
 
 import javafx.scene.shape.Shape;
 
-import java.util.List;
-
+/**
+ * This class represents the user-controlled paddle that is used to play the game
+ */
 public class Paddle extends InteractiveRectangle {
     public static final int BASE_PADDLE_WIDTH = 100;
     public static final int PADDLE_HEIGHT = 20;
+    public static final double BASE_PADDLE_SPEED = 1000;
 
     private double paddleSpeed;
 
     public Paddle(double startX, double startY){
         super(startX, startY, BASE_PADDLE_WIDTH, PADDLE_HEIGHT);
-        paddleSpeed = 4000;
+        paddleSpeed = BASE_PADDLE_SPEED;
     }
 
     public double getPaddleSpeed() {
@@ -41,19 +43,17 @@ public class Paddle extends InteractiveRectangle {
         }
     }
 
-    public double getCenterX(){
-        return this.getX() + (BASE_PADDLE_WIDTH /2);
-    }
-
     @Override
-    public void onIntersect(Shape shape, List<InteractiveRectangle> objectList, List<Ball> ballList) {
+    public void onIntersect(Shape shape) {
         return;
     }
+
 
     @Override
     public void onWallContact(int screenWidth, int screenHeight) {
         return;
     }
+
 
     @Override
     public void updatePosition(double elapsedTime) {

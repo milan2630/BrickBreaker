@@ -1,3 +1,4 @@
+//@author Milan Bhat
 package breakout;
 
 import javafx.animation.KeyFrame;
@@ -18,18 +19,15 @@ import javafx.util.Duration;
 
 import java.io.*;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Feel free to completely change this code or delete it entirely. 
+ * The Main class is used to run the game and keeps track of the stage and scene.
  */
 public class Main extends Application {
-    /**
-     * Start of the program.
-     */
-    public static final int MOVER_SPEED = 5;
-    public static final int FRAMES_PER_SECOND = 200;
+    public static final int FRAMES_PER_SECOND = 100;
     public static final int MILLISECOND_DELAY = 1000 / FRAMES_PER_SECOND;
     public static final double SECOND_DELAY = 1.0 / FRAMES_PER_SECOND;
     public static final int SCREEN_WIDTH = 1000;
@@ -54,10 +52,18 @@ public class Main extends Application {
     private Group root;
     private Stage mainStage;
 
+    /**
+     * First function to run in the program, simply launches the game
+     */
     public static void main (String[] args) {
         launch(args);
     }
 
+    /**
+     * Sets up the splash screen and assigns all variables
+     * @param stage is the stage showing the scenes
+     * @throws Exception if the setup files have an issue
+     */
     @Override
     public void start(Stage stage) throws Exception {
         lives = START_LIVES;
@@ -77,6 +83,9 @@ public class Main extends Application {
         animation.play();
     }
 
+    /**
+     * @return a scene with the splash screen
+     */
     private Scene splashScreen(){
         Button startGame = new Button("PLAY");
         startGame.setOnAction(e -> startGame());
@@ -87,6 +96,9 @@ public class Main extends Application {
         return new Scene(vbox, SCREEN_WIDTH, SCREEN_HEIGHT);
     }
 
+    /**
+     * @return a VBox containing the game name and the instructions
+     */
     private VBox header(){
         Label title = new Label("Brick Breaker Superstar");
         title.setFont(Font.font("Arial", 30));
@@ -100,6 +112,9 @@ public class Main extends Application {
 
     }
 
+    /**
+     * Enters levels when player clicks play
+     */
     private void startGame(){
         try{
             mainStage.setScene(setupLevel(1));
@@ -110,42 +125,67 @@ public class Main extends Application {
         isLevel = true;
     }
 
+    /**
+     * Initializes variables and objects for the levels and puts the bricks where they are supposed to be
+     * @param level which the player is on
+     * @return a scene with everything for a level set up
+     * @throws IOException if there is an issue with the level setup file
+     */
     private Scene setupLevel(int level) throws IOException {
         currentLevel = level;
         initializeLevelVariables();
         initializeDisplay();
         initializePaddle();
         initializeBall();
-        File levelFile = new File("doc/LevelFiles/SetupLevel"+level+".txt");
-        BufferedReader reader = new BufferedReader(new FileReader(levelFile));
-        String line = "";
-        while((line = reader.readLine()) != null){
-            String[] lineComponents = line.split("/");
-            double brickY = Double.parseDouble(lineComponents[0]);
-            double brickX = Double.parseDouble(lineComponents[1]);
-            try{
-                Class brickClass = Class.forName("breakout."+lineComponents[2]);
-                Class[] parameterTypes = {Double.TYPE, Double.TYPE, Double.TYPE};
-                Constructor constructor = brickClass.getConstructor(parameterTypes);
-                Object newBrick = constructor.newInstance(brickX, brickY, Double.parseDouble(lineComponents[3]));
-                bricksInPlay.add((Brick) newBrick);
-                objectsInPlay.add((Brick) newBrick);
-                root.getChildren().add((Brick) newBrick);
-            }
-            catch (Exception e){
-                e.printStackTrace();
-            }
-        }
+        initializeBricks(level);
+
 
         Scene scene = new Scene(root, SCREEN_WIDTH, SCREEN_HEIGHT);
         scene.setOnKeyPressed(e -> handleKeyInput(e.getCode()));
         return scene;
     }
 
-    private void intializeBricks(){
 
+    /**
+     * Puts the bricks in the desired formation for the level
+     * @param level is the current level
+     * @throws IOException if there is an issue with the level setup file
+     */
+    private void initializeBricks(int level) throws IOException {
+        File levelFile = new File("doc/LevelFiles/SetupLevel"+level+".txt");
+        BufferedReader reader = new BufferedReader(new FileReader(levelFile));
+        String line = "";
+        while((line = reader.readLine()) != null){
+            String[] lineComponents = line.split("/");
+            try{
+                createBrick(lineComponents);
+            }
+            catch (Exception e){
+                e.printStackTrace();
+            }
+        }
     }
 
+    /**
+     * Creates an individual brick based on a line in the setup file
+     * @param components the information on one line of the setup file regarding what brick to place where
+     * Throws and exception if there is an issue with the level setup file
+     */
+    private void createBrick(String[] components) throws ClassNotFoundException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
+        Class brickClass = Class.forName("breakout."+components[2]);
+        Class[] parameterTypes = {Double.TYPE, Double.TYPE, Double.TYPE};
+        Constructor constructor = brickClass.getConstructor(parameterTypes);
+        double brickY = Double.parseDouble(components[0]);
+        double brickX = Double.parseDouble(components[1]);
+        Object newBrick = constructor.newInstance(brickX, brickY, Double.parseDouble(components[3]));
+        bricksInPlay.add((Brick) newBrick);
+        objectsInPlay.add((Brick) newBrick);
+        root.getChildren().add((Brick) newBrick);
+    }
+
+    /**
+     * Creates a ball and sets it on the paddle in the start of the game
+     */
     private void initializeBall() {
         Ball resetBall = new Ball(paddle);
         resetBall.setFill(Color.RED);
@@ -153,6 +193,9 @@ public class Main extends Application {
         isBallActive = false;
     }
 
+    /**
+     * Initializes lists which keep track of objects in the game
+     */
     private void initializeLevelVariables(){
         root = new Group();
         ballsInPlay = new ArrayList<>();
@@ -160,6 +203,9 @@ public class Main extends Application {
         objectsInPlay = new ArrayList<>();
     }
 
+    /**
+     * Initializes paddle in scene
+     */
     private void initializePaddle() {
         paddle = new Paddle((SCREEN_WIDTH / 2) - (Paddle.BASE_PADDLE_WIDTH / 2), PADDLE_Y_POS);
         paddle.setFill(Color.BLACK);
@@ -167,6 +213,9 @@ public class Main extends Application {
         objectsInPlay.add(paddle);
     }
 
+    /**
+     * Initializes the display for the score and the player's lives
+     */
     private void initializeDisplay() {
         display.setX(0);
         display.setY(15);
@@ -177,6 +226,10 @@ public class Main extends Application {
         root.getChildren().add(display);
     }
 
+    /**
+     * Controls what is done when a key is pressed
+     * @param code the code related to which key is pressed
+     */
     private void handleKeyInput(KeyCode code) {
         if (code == KeyCode.RIGHT) {
             paddle.moveRight(SECOND_DELAY);
@@ -199,10 +252,16 @@ public class Main extends Application {
         else if (code == KeyCode.DIGIT6){
             lives++;
         }
+        else if(code == KeyCode.Y){
+            gameWin();
+        }
         setLevelOnClick(code);
 
     }
 
+    /**
+     * Resets the ball to be in the middle of the paddle and both to be in the middle of the scene
+     */
     private void resetBallPaddle() {
         paddle.setX(SCREEN_WIDTH/2);
         objectsInPlay.removeAll(ballsInPlay);
@@ -213,6 +272,10 @@ public class Main extends Application {
 
     }
 
+    /**
+     * Controls changing the level to the desired one when the number is clicked.
+     * @param code is the code related to the key which is pressed
+     */
     private void setLevelOnClick(KeyCode code){
         if(code.getCode() >= 49 && code.getCode() <= 52){
             try{
@@ -224,11 +287,19 @@ public class Main extends Application {
         }
     }
 
+    /**
+     * Pauses the game
+     * @param paused is the scene when the game is paused so that it can be continued from the same point
+     */
     private void pauseGame(Scene paused) {
         isLevel = false;
         mainStage.setScene(pauseScreen(paused));
     }
 
+    /**
+     * @param paused is the scene when the game is paused so that it can be continued from the same point
+     * @return the scene for the pause screen
+     */
     private Scene pauseScreen(Scene paused) {
         Button resumeGame = new Button("Resume");
         resumeGame.setOnAction(e -> resumeGame(paused));
@@ -241,6 +312,9 @@ public class Main extends Application {
         return new Scene(vbox, SCREEN_WIDTH, SCREEN_HEIGHT);
     }
 
+    /**
+     * @return a VBox explaining how to use the cheat keys
+     */
     public VBox cheatKeySet(){
         VBox cheatKeySet = new VBox();
         cheatKeySet.setAlignment(Pos.TOP_CENTER);
@@ -256,21 +330,38 @@ public class Main extends Application {
         return cheatKeySet;
     }
 
+    /**
+     * @param key to perform the cheat
+     * @param function of the cheat key
+     * @return a cheat key instruction in the proper format
+     */
     private String cheatCodeInstruction(String key, String function){
         return "Press " + key + " to " + function;
     }
 
+    /**
+     * Restarts the game
+     */
     private void restartGame() {
         mainStage.setScene(splashScreen());
         currentLevel = 1;
         lives = START_LIVES;
     }
 
+    /**
+     * Resumes the game to the scene from before it was paused
+     * @param paused is the scene from before the game was paused
+     */
     private void resumeGame(Scene paused){
         mainStage.setScene(paused);
         isLevel = true;
     }
 
+    /**
+     * Runs continuously as the game is played.
+     * This is the function doing repeated checks for any changes in the game.
+     * @param elapsedTime time between each call to this function
+     */
     private void step(double elapsedTime){
         if(isLevel) {
             checkForIntersections();
@@ -285,10 +376,16 @@ public class Main extends Application {
         }
     }
 
+    /**
+     * Updates the displayed score
+     */
     private void updateScore() {
         display.setText("Score: " + score + " Lives: "+ lives);
     }
 
+    /**
+     * Moves the ball with the paddle if the ball has not been launched yet
+     */
     private void moveBallWithPaddle(){
         if(!isBallActive){
             for(int i = 0; i < ballsInPlay.size(); i++){
@@ -298,6 +395,9 @@ public class Main extends Application {
     }
 
 
+    /**
+     * Checks if the level has been beaten and moves to the next level or calls the win screen if the it has.
+     */
     private void checkLevelBeat() {
         if(bricksInPlay.size() == 0){
             if(currentLevel <= NUM_LEVELS){
@@ -315,11 +415,17 @@ public class Main extends Application {
         }
     }
 
+    /**
+     * Displays the winning screen
+     */
     private void gameWin() {
         mainStage.setScene(winScreen());
         isLevel = false;
     }
 
+    /**
+     * @return The scene with the winning screen information
+     */
     private Scene winScreen(){
         Label congrats = new Label("CONGRATULATIONS!");
         congrats.setFont(Font.font("Arial", 40));
@@ -334,12 +440,18 @@ public class Main extends Application {
         return new Scene(v, SCREEN_WIDTH, SCREEN_HEIGHT);
     }
 
+    /**
+     * @return a button to restart the game
+     */
     private Button restartButton(){
         Button restartGame = new Button("Restart");
         restartGame.setOnAction(e -> restartGame());
         return restartGame;
     }
 
+    /**
+     * Check if the player has lost and if so, then display the game over scene
+     */
     private void checkGameOver(){
         if(lives == 0){
             mainStage.setScene(gameOverScreen());
@@ -347,6 +459,9 @@ public class Main extends Application {
         }
     }
 
+    /**
+     * @return the scene with the game over screen
+     */
     private Scene gameOverScreen(){
         Label lose = new Label("Game Over!");
         lose.setFont(Font.font("Arial", 40));
@@ -358,6 +473,9 @@ public class Main extends Application {
         return new Scene(v, SCREEN_WIDTH, SCREEN_HEIGHT);
     }
 
+    /**
+     * Check if the ball has gone out of the bottom of the screen to determine if the player has lost a life
+     */
     private void checkIfLifeLoss(){
         if(ballsInPlay.size() == 0){
             lives--;
@@ -368,18 +486,29 @@ public class Main extends Application {
         }
     }
 
+    /**
+     * Updates the position of all objects in play
+     * @param elapsedTime is the time between each update which is used to calculate how far objects have moved
+     */
     private void updateObjectPositions(double elapsedTime){
         for(int i = 0; i < objectsInPlay.size(); i++){
             objectsInPlay.get(i).updatePosition(elapsedTime);
         }
     }
 
+    /**
+     * Adds the given ball to the scene and the relevant object lists
+     * @param ball is the ball to be added
+     */
     private void addBallToScene(Ball ball){
         ballsInPlay.add(ball);
         objectsInPlay.add(ball);
         root.getChildren().add(ball);
     }
 
+    /**
+     * Removes any balls that went below the screen
+     */
     private void removeLostBalls() {
         for(int i = 0; i < ballsInPlay.size(); i++){
             if(ballsInPlay.get(i).isOutOfPlay(SCREEN_HEIGHT)){
@@ -389,6 +518,9 @@ public class Main extends Application {
         }
     }
 
+    /**
+     * Remove any bricks that have 0 or less required hits to break
+     */
     private void removeDestroyedBricks() {
         for(int i = 0; i < bricksInPlay.size(); i++){
             if(bricksInPlay.get(i).getRequiredHits() <= 0) {
@@ -398,12 +530,14 @@ public class Main extends Application {
         }
     }
 
-
+    /**
+     * Checks if any objects in play intersect with any other objects in play or the wall and calls the appropriate function to handle the situation.
+     */
     private void checkForIntersections() {
         for(int i = 0; i < objectsInPlay.size(); i++){
             for(int j = 0; j <objectsInPlay.size(); j++){
                 if(i != j){
-                    objectsInPlay.get(i).onIntersect(objectsInPlay.get(j), objectsInPlay, ballsInPlay);
+                    objectsInPlay.get(i).onIntersect(objectsInPlay.get(j));
                 }
             }
             objectsInPlay.get(i).onWallContact(SCREEN_WIDTH, SCREEN_HEIGHT);
