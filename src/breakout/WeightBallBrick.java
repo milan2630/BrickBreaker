@@ -1,12 +1,11 @@
 package breakout;
 
 import javafx.scene.Group;
-import javafx.scene.shape.Shape;
 
 import java.util.List;
 
 public class WeightBallBrick extends Brick {
-    private int ballWeightMultiplier;
+    private double ballWeightMultiplier;
 
 
     public WeightBallBrick(double x, double y, int width, int height) {
@@ -19,7 +18,7 @@ public class WeightBallBrick extends Brick {
         ballWeightMultiplier = weightFactor;
     }
 
-    public int getBallWeightMultiplier(){
+    public double getBallWeightMultiplier(){
         return ballWeightMultiplier;
     }
 

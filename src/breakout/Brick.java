@@ -6,8 +6,8 @@ import javafx.scene.shape.Shape;
 import java.util.List;
 
 public class Brick extends InteractiveRectangle {
-    public static final int DEFAULT_WIDTH = 50;
-    public static final int DEFAULT_HEIGHT = 10;
+    public static final int DEFAULT_WIDTH = 40;
+    public static final int DEFAULT_HEIGHT = 8;
     private int requiredHits;
 
     public Brick(double x, double y, int width, int height){
@@ -24,6 +24,12 @@ public class Brick extends InteractiveRectangle {
         super(x, y, DEFAULT_WIDTH, DEFAULT_HEIGHT);
         requiredHits = strength;
     }
+
+    public Brick(double x, double y, double strength){
+        this(x, y, (int) strength);
+    }
+
+
 
     public int getRequiredHits(){
         return requiredHits;

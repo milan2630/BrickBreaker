@@ -26,6 +26,10 @@ public class MultiBallBrick extends Brick {
         numBalls = balls;
     }
 
+    public MultiBallBrick(double x, double y, double balls){
+        this(x, y, (int) balls);
+    }
+
     public int getNumBalls() {
         return numBalls;
     }

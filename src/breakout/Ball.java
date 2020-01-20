@@ -11,7 +11,7 @@ public class Ball extends InteractiveRectangle {
 
     private double mySpeedX;
     private double mySpeedY;
-    private int myWeight;
+    private double myWeight;
 
 
     public Ball(double startX, double startY){
@@ -36,7 +36,7 @@ public class Ball extends InteractiveRectangle {
         this.setY(paddle.getY() - BALL_SIZE);
     }
 
-    public int getWeight(){
+    public double getWeight(){
         return myWeight;
     }
 
@@ -48,7 +48,7 @@ public class Ball extends InteractiveRectangle {
         mySpeedY = newSpeedY;
     }
 
-    public void setMyWeight(int newWeight){
+    public void setMyWeight(double newWeight){
         myWeight = newWeight;
     }
 

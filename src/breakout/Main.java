@@ -16,6 +16,8 @@ import javafx.stage.Stage;
 import javafx.scene.paint.Color;
 import javafx.util.Duration;
 
+import java.io.*;
+import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -99,21 +101,49 @@ public class Main extends Application {
     }
 
     private void startGame(){
-        mainStage.setScene(setupLevel(1));
+        try{
+            mainStage.setScene(setupLevel(1));
+        }
+        catch(IOException e){
+            e.printStackTrace();
+        }
         isLevel = true;
     }
 
-    private Scene setupLevel(int level){
+    private Scene setupLevel(int level) throws IOException {
         currentLevel = level;
         initializeLevelVariables();
         initializeDisplay();
         initializePaddle();
         initializeBall();
-        
+        File levelFile = new File("doc/LevelFiles/SetupLevel"+level+".txt");
+        BufferedReader reader = new BufferedReader(new FileReader(levelFile));
+        String line = "";
+        while((line = reader.readLine()) != null){
+            String[] lineComponents = line.split("/");
+            double brickY = Double.parseDouble(lineComponents[0]);
+            double brickX = Double.parseDouble(lineComponents[1]);
+            try{
+                Class brickClass = Class.forName("breakout."+lineComponents[2]);
+                Class[] parameterTypes = {Double.TYPE, Double.TYPE, Double.TYPE};
+                Constructor constructor = brickClass.getConstructor(parameterTypes);
+                Object newBrick = constructor.newInstance(brickX, brickY, Double.parseDouble(lineComponents[3]));
+                bricksInPlay.add((Brick) newBrick);
+                objectsInPlay.add((Brick) newBrick);
+                root.getChildren().add((Brick) newBrick);
+            }
+            catch (Exception e){
+                e.printStackTrace();
+            }
+        }
 
         Scene scene = new Scene(root, SCREEN_WIDTH, SCREEN_HEIGHT);
         scene.setOnKeyPressed(e -> handleKeyInput(e.getCode()));
         return scene;
+    }
+
+    private void intializeBricks(){
+
     }
 
     private void initializeBall() {
@@ -185,7 +215,12 @@ public class Main extends Application {
 
     private void setLevelOnClick(KeyCode code){
         if(code.getCode() >= 49 && code.getCode() <= 52){
-            mainStage.setScene(setupLevel(code.getCode() - 48));
+            try{
+                mainStage.setScene(setupLevel(code.getCode() - 48));
+            }
+            catch (IOException e){
+                e.printStackTrace();
+            }
         }
     }
 
@@ -266,7 +301,12 @@ public class Main extends Application {
     private void checkLevelBeat() {
         if(bricksInPlay.size() == 0){
             if(currentLevel <= NUM_LEVELS){
-                mainStage.setScene(setupLevel(currentLevel+1));
+                try {
+                    mainStage.setScene(setupLevel(currentLevel + 1));
+                }
+                catch (IOException e){
+                    e.printStackTrace();
+                }
             }
             else{
                 gameWin();
