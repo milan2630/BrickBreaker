@@ -33,7 +33,7 @@ public class Main extends Application {
     public static final int SCREEN_WIDTH = 1000;
     public static final int SCREEN_HEIGHT = 500;
     private static final int START_LIVES = 3;
-    private static final int NUM_LEVELS = 2;
+    private static final int NUM_LEVELS = 4;
     private static final int SCORE_PER_BRICK = 10;
     private static final double PADDLE_Y_POS = 450;
 
